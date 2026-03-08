@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo 6x6 cm to A4</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --line: #dbe3ee;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-2: #dbeafe;
+      --danger: #dc2626;
+      --shadow: 0 10px 30px rgba(15,23,42,0.08);
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .wrap {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 22px 22px 10px;
+    }
+    .card-title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .card-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .card-body {
+      padding: 16px 22px 22px;
+    }
+    .section { margin-bottom: 22px; }
+    .section:last-child { margin-bottom: 0; }
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 18px 0;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-secondary { background: #eef2ff; border-color: #c7d2fe; color: #312e81; }
+    .btn-danger { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+    .btn-block { width: 100%; }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      background: #fff;
+    }
+    .stat .num { font-size: 24px; font-weight: 700; }
+    .stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    input[type="range"] { width: 100%; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+    .crop-box {
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .crop-preview {
+      width: 240px;
+      height: 240px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: inset 0 1px 8px rgba(0,0,0,.08);
+      position: relative;
+    }
+    .crop-preview img, .thumb img, .preview-slot img {
+      position: absolute;
+      max-width: none;
+      user-select: none;
+      pointer-events: none;
+      transform-origin: center center;
+    }
+    .helper { color: var(--muted); font-size: 12px; }
+    .a4-shell {
+      background: #e2e8f0;
+      border-radius: 24px;
+      padding: 16px;
+      overflow: auto;
+    }
+    .a4 {
+      margin: 0 auto;
+      background: white;
+      position: relative;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.2);
+    }
+    .preview-slot {
+      position: absolute;
+      overflow: hidden;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+    }
+    .preview-slot.active { outline: 3px solid #38bdf8; }
+    .preview-slot .cutline {
+      position: absolute;
+      inset: 0;
+      border: 1px dashed rgba(0,0,0,.5);
+      pointer-events: none;
+    }
+    .toolbar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .rotate-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .thumb-list {
+      max-height: 260px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      background: #fff;
+    }
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .thumb {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 8px;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .thumb.active { border-color: #38bdf8; background: #eff6ff; }
+    .thumb:hover { background: #f8fafc; }
+    .thumb-box {
+      aspect-ratio: 1 / 1;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #f1f5f9;
+    }
+    .thumb-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #334155;
+    }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      white-space: nowrap;
+      background: #fff;
+    }
+    .placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 180px;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      color: var(--muted);
+      background: #fff;
+    }
+    @media (max-width: 1100px) {
+      .wrap { grid-template-columns: 1fr; }
+      .thumb-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 720px) {
+      .wrap { padding: 12px; }
+      .grid-3, .toolbar-grid, .thumb-grid { grid-template-columns: 1fr 1fr; }
+      .rotate-grid { grid-template-columns: repeat(2, 1fr); }
+      .crop-preview { width: 210px; height: 210px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Photo 6×6 cm → A4</h1>
+        <p class="card-subtitle">อัปโหลดหลายภาพ ปรับครอบแบบ 1:1 ทีละภาพ เรียงลง A4 อัตโนมัติ แล้วพิมพ์หรือดาวน์โหลดเป็น PDF</p>
+      </div>
+      <div class="card-body">
+        <div class="section">
+          <button class="btn btn-primary btn-block" id="addBtn">เพิ่มรูปภาพ</button>
+          <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          <div class="grid-3" style="margin-top:12px">
+            <div class="stat"><div class="num" id="statPhotos">0</div><div class="label">จำนวนรูป</div></div>
+            <div class="stat"><div class="num" id="statPerPage">0</div><div class="label">ต่อหน้า</div></div>
+            <div class="stat"><div class="num" id="statPages">0</div><div class="label">จำนวนหน้า</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <div class="field">
+            <label>ขนาดรูป <span id="photoMMLabel">60 × 60 มม.</span></label>
+            <input type="range" id="photoMM" min="30" max="90" step="1" value="60">
+          </div>
+          <div class="field">
+            <label>ระยะห่าง <span id="gapMMLabel">6 มม.</span></label>
+            <input type="range" id="gapMM" min="0" max="15" step="1" value="6">
+          </div>
+          <div class="field">
+            <label>ขอบกระดาษ <span id="marginMMLabel">10 มม.</span></label>
+            <input type="range" id="marginMM" min="0" max="20" step="1" value="10">
+          </div>
+          <div class="toggle-row">
+            <span>แสดงเส้นตัดรูป</span>
+            <input type="checkbox" id="showCutLines" checked>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;">
+            <strong>ปรับรูปที่เลือก</strong>
+            <span class="badge" id="selectedName">ยังไม่เลือกรูป</span>
+          </div>
+
+          <div id="editPanelEmpty" class="placeholder">เพิ่มรูปก่อน แล้วคลิกเลือกรูปจากรายการด้านล่าง</div>
+
+          <div id="editPanel" style="display:none;">
+            <div class="field">
+              <label>Zoom <span id="zoomLabel">1.00x</span></label>
+              <input type="range" id="zoom" min="1" max="3" step="0.01" value="1">
+            </div>
+            <div class="field">
+              <label>เลื่อนซ้าย-ขวา <span id="offsetXLabel">0.00</span></label>
+              <input type="range" id="offsetX" min="-1" max="1" step="0.01" value="0">
+            </div>
+            <div class="field">
+              <label>เลื่อนบน-ล่าง <span id="offsetYLabel">0.00</span></label>
+              <input type="range" id="offsetY" min="-1" max="1" step="0.01" value="0">
+            </div>
+
+            <div class="field">
+              <label>หมุนภาพ <span id="rotationLabel">0°</span></label>
+              <div class="rotate-grid">
+                <button class="btn rotate-btn" data-rot="0">0°</button>
+                <button class="btn rotate-btn" data-rot="90">90°</button>
+                <button class="btn rotate-btn" data-rot="180">180°</button>
+                <button class="btn rotate-btn" data-rot="270">270°</button>
+              </div>
+            </div>
+
+            <div class="toolbar-grid" style="margin-bottom:14px;">
+              <button class="btn" id="resetBtn">รีเซ็ต</button>
+              <button class="btn btn-danger" id="removeBtn">ลบรูปนี้</button>
+              <button class="btn" id="fitCenterBtn">จัดกลาง</button>
+            </div>
+
+            <div class="crop-box">
+              <div class="crop-preview" id="cropPreview"></div>
+              <p class="helper" style="text-align:center;margin:10px 0 0;">ตัวอย่างการครอบแบบสี่เหลี่ยม 1:1</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section toolbar-grid">
+          <button class="btn btn-primary" id="printBtn">พิมพ์</button>
+          <button class="btn btn-secondary" id="pdfBtn">PDF</button>
+          <button class="btn" id="clearBtn">ล้างทั้งหมด</button>
+        </div>
+        <p class="helper">เวลาพิมพ์จริงให้เลือกกระดาษ A4 และตั้ง Scale = 100% หรือ Actual size เพื่อให้ขนาด 6×6 ซม. แม่นยำ</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title" style="font-size:22px">ตัวอย่างหน้า A4</h2>
+        <p class="card-subtitle">ด้านขวาเป็น preview หน้าแรก ส่วนรายการรูปล่างสุดใช้สำหรับเลือกรูปที่ต้องการปรับ</p>
+      </div>
+      <div class="card-body">
+        <div class="a4-shell">
+          <div class="a4" id="a4Preview"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 10px;">
+          <strong>รายการรูปทั้งหมด</strong>
+          <span class="helper">คลิกเพื่อเลือกและปรับครอบ</span>
+        </div>
+
+        <div class="thumb-list">
+          <div class="thumb-grid" id="thumbGrid"></div>
+          <div class="placeholder" id="thumbEmpty">ยังไม่มีรูปภาพในโปรเจกต์นี้</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const MM_TO_PX = 3.7795275591;
+    const A4_W_MM = 210;
+    const A4_H_MM = 297;
+    const PREVIEW_SCALE = 1.35;
+
+    const state = {
+      photos: [],
+      selectedId: null,
+      photoMM: 60,
+      gapMM: 6,
+      marginMM: 10,
+      showCutLines: true,
+    };
+
+    const el = {
+      fileInput: document.getElementById('fileInput'),
+      addBtn: document.getElementById('addBtn'),
+      photoMM: document.getElementById('photoMM'),
+      gapMM: document.getElementById('gapMM'),
+      marginMM: document.getElementById('marginMM'),
+      showCutLines: document.getElementById('showCutLines'),
+      photoMMLabel: document.getElementById('photoMMLabel'),
+      gapMMLabel: document.getElementById('gapMMLabel'),
+      marginMMLabel: document.getElementById('marginMMLabel'),
+      statPhotos: document.getElementById('statPhotos'),
+      statPerPage: document.getElementById('statPerPage'),
+      statPages: document.getElementById('statPages'),
+      selectedName: document.getElementById('selectedName'),
+      editPanel: document.getElementById('editPanel'),
+      editPanelEmpty: document.getElementById('editPanelEmpty'),
+      zoom: document.getElementById('zoom'),
+      offsetX: document.getElementById('offsetX'),
+      offsetY: document.getElementById('offsetY'),
+      zoomLabel: document.getElementById('zoomLabel'),
+      offsetXLabel: document.getElementById('offsetXLabel'),
+      offsetYLabel: document.getElementById('offsetYLabel'),
+      rotationLabel: document.getElementById('rotationLabel'),
+      cropPreview: document.getElementById('cropPreview'),
+      a4Preview: document.getElementById('a4Preview'),
+      thumbGrid: document.getElementById('thumbGrid'),
+      thumbEmpty: document.getElementById('thumbEmpty'),
+      printBtn: document.getElementById('printBtn'),
+      pdfBtn: document.getElementById('pdfBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      removeBtn: document.getElementById('removeBtn'),
+      fitCenterBtn: document.getElementById('fitCenterBtn'),
+    };
+
+    function mmToPx(mm) { return mm * MM_TO_PX; }
+
+    function uid() {
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function getSelected() {
+      return state.photos.find(p => p.id === state.selectedId) || null;
+    }
+
+    function getGridLayout(photoCount) {
+      const photoMM = state.photoMM;
+      const gapMM = state.gapMM;
+      const marginMM = state.marginMM;
+      const usableW = A4_W_MM - marginMM * 2;
+      const usableH = A4_H_MM - marginMM * 2;
+      const cols = Math.max(1, Math.floor((usableW + gapMM) / (photoMM + gapMM)));
+      const rows = Math.max(1, Math.floor((usableH + gapMM) / (photoMM + gapMM)));
+      const perPage = Math.max(1, cols * rows);
+      const actualGridW = cols * photoMM + (cols - 1) * gapMM;
+      const actualGridH = rows * photoMM + (rows - 1) * gapMM;
+      const startX = (A4_W_MM - actualGridW) / 2;
+      const startY = (A4_H_MM - actualGridH) / 2;
+      const boxes = [];
+      for (let i = 0; i < photoCount; i++) {
+        const page = Math.floor(i / perPage);
+        const indexInPage = i % perPage;
+        const r = Math.floor(indexInPage / cols);
+        const c = indexInPage % cols;
+        boxes.push({
+          x: startX + c * (photoMM + gapMM),
+          y: startY + r * (photoMM + gapMM),
+          w: photoMM,
+          h: photoMM,
+          page,
+          photoIndex: i,
+        });
+      }
+      return { cols, rows, perPage, pages: Math.max(1, Math.ceil(photoCount / perPage)), boxes };
+    }
+
+    function renderPhotoIntoContainer(photo, container) {
+      container.innerHTML = '';
+      if (!photo) return;
+      const img = document.createElement('img');
+      img.src = photo.src;
+      const rotation = ((photo.rotation % 360) + 360) % 360;
+      const rotated = rotation === 90 || rotation === 270;
+      const iw = rotated ? photo.naturalHeight : photo.naturalWidth;
+      const ih = rotated ? photo.naturalWidth : photo.naturalHeight;
+      const baseScale = Math.max(1 / iw, 1 / ih);
+      const drawW = iw * baseScale * photo.zoom;
+      const drawH = ih * baseScale * photo.zoom;
+      const overflowX = Math.max(0, drawW - 1);
+      const overflowY = Math.max(0, drawH - 1);
+      const shiftX = (photo.offsetX * overflowX) / 2;
+      const shiftY = (photo.offsetY * overflowY) / 2;
+      img.style.width = `${drawW * 100}%`;
+      img.style.height = `${drawH * 100}%`;
+      img.style.left = `calc(50% - ${drawW * 50}% - ${shiftX * 100}%)`;
+      img.style.top = `calc(50% - ${drawH * 50}% - ${shiftY * 100}%)`;
+      img.style.transform = `rotate(${rotation}deg)`;
+      container.appendChild(img);
+    }
+
+    function drawCroppedImage(ctx, photo, dx, dy, dSize) {
+      const img = photo.img;
+      const rotation = ((photo.rotation % 360) + 360) % 360;
+      const rotated = rotation === 90 || rotation === 270;
+      const iw = rotated ? photo.naturalHeight : photo.naturalWidth;
+      const ih = rotated ? photo.naturalWidth : photo.naturalHeight;
+      const baseScale = Math.max(dSize / iw, dSize / ih);
+      const scale = baseScale * photo.zoom;
+      const drawW = iw * scale;
+      const drawH = ih * scale;
+      const overflowX = Math.max(0, drawW - dSize);
+      const overflowY = Math.max(0, drawH - dSize);
+      const shiftX = (photo.offsetX * overflowX) / 2;
+      const shiftY = (photo.offsetY * overflowY) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(dx, dy, dSize, dSize);
+      ctx.clip();
+      const cx = dx + dSize / 2;
+      const cy = dy + dSize / 2;
+      ctx.translate(cx, cy);
+      ctx.rotate(rotation * Math.PI / 180);
+      ctx.drawImage(img, -drawW / 2 - shiftX, -drawH / 2 - shiftY, drawW, drawH);
+      ctx.restore();
+    }
+
+    function buildPageCanvas(page, dpi = 300) {
+      const pxPerMm = dpi / 25.4;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(A4_W_MM * pxPerMm);
+      canvas.height = Math.round(A4_H_MM * pxPerMm);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const layout = getGridLayout(state.photos.length);
+      const pageBoxes = layout.boxes.filter(b => b.page === page);
+      pageBoxes.forEach(box => {
+        const photo = state.photos[box.photoIndex];
+        drawCroppedImage(ctx, photo, box.x * pxPerMm, box.y * pxPerMm, box.w * pxPerMm);
+        if (state.showCutLines) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([10, 6]);
+          ctx.strokeRect(box.x * pxPerMm, box.y * pxPerMm, box.w * pxPerMm, box.h * pxPerMm);
+          ctx.restore();
+        }
+      });
+      return canvas;
+    }
+
+    function syncEditPanel() {
+      const photo = getSelected();
+      if (!photo) {
+        el.selectedName.textContent = 'ยังไม่เลือกรูป';
+        el.editPanel.style.display = 'none';
+        el.editPanelEmpty.style.display = 'flex';
+        return;
+      }
+      el.selectedName.textContent = photo.name;
+      el.editPanel.style.display = 'block';
+      el.editPanelEmpty.style.display = 'none';
+      el.zoom.value = photo.zoom;
+      el.offsetX.value = photo.offsetX;
+      el.offsetY.value = photo.offsetY;
+      el.zoomLabel.textContent = `${photo.zoom.toFixed(2)}x`;
+      el.offsetXLabel.textContent = Number(photo.offsetX).toFixed(2);
+      el.offsetYLabel.textContent = Number(photo.offsetY).toFixed(2);
+      el.rotationLabel.textContent = `${photo.rotation}°`;
+      document.querySelectorAll('.rotate-btn').forEach(btn => {
+        btn.classList.toggle('btn-primary', Number(btn.dataset.rot) === photo.rotation);
+      });
+      renderPhotoIntoContainer(photo, el.cropPreview);
+    }
+
+    function renderPreview() {
+      const layout = getGridLayout(state.photos.length);
+      const previewW = mmToPx(A4_W_MM) / PREVIEW_SCALE;
+      const previewH = mmToPx(A4_H_MM) / PREVIEW_SCALE;
+      el.a4Preview.style.width = `${previewW}px`;
+      el.a4Preview.style.height = `${previewH}px`;
+      el.a4Preview.innerHTML = '';
+      layout.boxes.filter(b => b.page === 0).forEach(box => {
+        const photo = state.photos[box.photoIndex];
+        const slot = document.createElement('div');
+        slot.className = 'preview-slot' + (photo.id === state.selectedId ? ' active' : '');
+        slot.style.left = `${mmToPx(box.x) / PREVIEW_SCALE}px`;
+        slot.style.top = `${mmToPx(box.y) / PREVIEW_SCALE}px`;
+        slot.style.width = `${mmToPx(box.w) / PREVIEW_SCALE}px`;
+        slot.style.height = `${mmToPx(box.h) / PREVIEW_SCALE}px`;
+        slot.onclick = () => { state.selectedId = photo.id; renderAll(); };
+        renderPhotoIntoContainer(photo, slot);
+        if (state.showCutLines) {
+          const cutline = document.createElement('div');
+          cutline.className = 'cutline';
+          slot.appendChild(cutline);
+        }
+        el.a4Preview.appendChild(slot);
+      });
+    }
+
+    function renderThumbs() {
+      el.thumbGrid.innerHTML = '';
+      el.thumbEmpty.style.display = state.photos.length ? 'none' : 'flex';
+      const layout = getGridLayout(state.photos.length);
+      state.photos.forEach((photo, idx) => {
+        const item = document.createElement('div');
+        item.className = 'thumb' + (photo.id === state.selectedId ? ' active' : '');
+        item.onclick = () => { state.selectedId = photo.id; renderAll(); };
+        const box = document.createElement('div');
+        box.className = 'thumb-box';
+        renderPhotoIntoContainer(photo, box);
+        const meta = document.createElement('div');
+        meta.className = 'thumb-meta';
+        meta.innerHTML = `<span title="${photo.name}">${idx + 1}. ${photo.name.length > 14 ? photo.name.slice(0,14) + '…' : photo.name}</span><span class="badge">${Math.floor(idx / layout.perPage) + 1}</span>`;
+        item.appendChild(box);
+        item.appendChild(meta);
+        el.thumbGrid.appendChild(item);
+      });
+    }
+
+    function renderStats() {
+      const layout = getGridLayout(state.photos.length);
+      el.statPhotos.textContent = state.photos.length;
+      el.statPerPage.textContent = layout.perPage;
+      el.statPages.textContent = layout.pages;
+      el.photoMMLabel.textContent = `${state.photoMM} × ${state.photoMM} มม.`;
+      el.gapMMLabel.textContent = `${state.gapMM} มม.`;
+      el.marginMMLabel.textContent = `${state.marginMM} มม.`;
+    }
+
+    function renderAll() {
+      if (state.selectedId && !state.photos.some(p => p.id === state.selectedId)) {
+        state.selectedId = state.photos[0]?.id || null;
+      }
+      if (!state.selectedId && state.photos.length) state.selectedId = state.photos[0].id;
+      renderStats();
+      syncEditPanel();
+      renderPreview();
+      renderThumbs();
+    }
+
+    async function addFiles(fileList) {
+      const files = Array.from(fileList || []).filter(f => f.type && f.type.startsWith('image/'));
+      if (!files.length) return;
+
+      const loaded = await Promise.allSettled(files.map(file => new Promise((resolve, reject) => {
+        const src = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => resolve({
+          id: uid(),
+          name: file.name,
+          src,
+          img,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          zoom: 1,
+          offsetX: 0,
+          offsetY: 0,
+          rotation: 0,
+        });
+        img.onerror = () => {
+          URL.revokeObjectURL(src);
+          reject(new Error(`โหลดรูปไม่สำเร็จ: ${file.name}`));
+        };
+        img.src = src;
+      })));
+
+      const ok = loaded.filter(r => r.status === 'fulfilled').map(r => r.value);
+      const failed = loaded.filter(r => r.status === 'rejected');
+      state.photos.push(...ok);
+      renderAll();
+
+      if (failed.length) {
+        alert(`มีบางรูปเพิ่มไม่ได้ ${failed.length} ไฟล์
+กรุณาลองแปลงเป็น JPG/PNG แล้วเพิ่มใหม่`);
+      }
+    }
+
+    function updateSelected(patch) {
+      const photo = getSelected();
+      if (!photo) return;
+      Object.assign(photo, patch);
+      renderAll();
+    }
+
+    function clearAll() {
+      state.photos.forEach(p => URL.revokeObjectURL(p.src));
+      state.photos = [];
+      state.selectedId = null;
+      renderAll();
+    }
+
+    function removeSelected() {
+      const photo = getSelected();
+      if (!photo) return;
+      URL.revokeObjectURL(photo.src);
+      state.photos = state.photos.filter(p => p.id !== photo.id);
+      state.selectedId = state.photos[0]?.id || null;
+      renderAll();
+    }
+
+    async function exportPDF() {
+      if (!state.photos.length) return;
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('โหลดไลบรารี PDF ไม่สำเร็จ');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const layout = getGridLayout(state.photos.length);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+      for (let page = 0; page < layout.pages; page++) {
+        if (page > 0) pdf.addPage();
+        const canvas = buildPageCanvas(page, 300);
+        const data = canvas.toDataURL('image/jpeg', 0.96);
+        pdf.addImage(data, 'JPEG', 0, 0, A4_W_MM, A4_H_MM, undefined, 'FAST');
+      }
+      pdf.save(`photos-${state.photoMM}x${state.photoMM}mm-a4.pdf`);
+    }
+
+    async function printPages() {
+      if (!state.photos.length) return;
+      const layout = getGridLayout(state.photos.length);
+      const pages = [];
+      for (let page = 0; page < layout.pages; page++) {
+        pages.push(buildPageCanvas(page, 200).toDataURL('image/png'));
+      }
+      const win = window.open('', '_blank');
+      if (!win) return;
+      win.document.write(`
+        <html>
+        <head>
+          <title>Print A4 Photos</title>
+          <style>
+            @page { size: A4 portrait; margin: 0; }
+            body { margin: 0; background: #fff; }
+            .page { width: 210mm; height: 297mm; page-break-after: always; }
+            .page:last-child { page-break-after: auto; }
+            img { width: 210mm; height: 297mm; display: block; }
+          </style>
+        </head>
+        <body>${pages.map(src => `<div class="page"><img src="${src}"></div>`).join('')}</body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => win.print(), 400);
+    }
+
+    el.addBtn.onclick = () => el.fileInput.click();
+    el.fileInput.onchange = (e) => { addFiles(e.target.files); e.target.value = ''; };
+    el.photoMM.oninput = e => { state.photoMM = Number(e.target.value); renderAll(); };
+    el.gapMM.oninput = e => { state.gapMM = Number(e.target.value); renderAll(); };
+    el.marginMM.oninput = e => { state.marginMM = Number(e.target.value); renderAll(); };
+    el.showCutLines.onchange = e => { state.showCutLines = e.target.checked; renderAll(); };
+
+    el.zoom.oninput = e => updateSelected({ zoom: Number(e.target.value) });
+    el.offsetX.oninput = e => updateSelected({ offsetX: Number(e.target.value) });
+    el.offsetY.oninput = e => updateSelected({ offsetY: Number(e.target.value) });
+    document.querySelectorAll('.rotate-btn').forEach(btn => {
+      btn.onclick = () => updateSelected({ rotation: Number(btn.dataset.rot) });
+    });
+    el.resetBtn.onclick = () => updateSelected({ zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 });
+    el.fitCenterBtn.onclick = () => updateSelected({ offsetX: 0, offsetY: 0 });
+    el.removeBtn.onclick = removeSelected;
+    el.clearBtn.onclick = clearAll;
+    el.pdfBtn.onclick = exportPDF;
+    el.printBtn.onclick = printPages;
+
+    window.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
